@@ -45,7 +45,7 @@ pipeline {
                 container('kubectl') {
                     sh '''
                         kubectl apply -f k8s/
-                        kubectl rollout status deployment/my-app --timeout=60s
+                        kubectl rollout status deployment/my-app -n default --timeout=60s
                     '''
                 }
             }
