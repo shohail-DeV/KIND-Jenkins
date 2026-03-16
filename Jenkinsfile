@@ -14,7 +14,7 @@ pipeline {
                     - name: DOCKER_TLS_CERTDIR
                       value: ""
                   - name: kubectl
-                    image: bitnami/kubectl:latest
+                    image: alpine/k8s:1.28.3
                     command:
                     - sleep
                     args:
@@ -30,15 +30,10 @@ pipeline {
             steps {
                 container('docker') {
                     sh '''
-                        # Configure Docker to allow insecure registry
                         mkdir -p /etc/docker
                         echo '{"insecure-registries":["kind-registry:5000"]}' > /etc/docker/daemon.json
-                        
-                        # Restart docker daemon to apply config
                         kill -SIGHUP $(cat /var/run/docker.pid) || true
                         sleep 3
-                        
-                        # Build and push
                         docker build -t $IMAGE .
                         docker push $IMAGE
                     '''
@@ -48,7 +43,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
-                    sh 'kubectl apply -f k8s/'
+                    sh '''
+                        kubectl apply -f k8s/
+                        kubectl rollout status deployment/my-app --timeout=60s
+                    '''
                 }
             }
         }
