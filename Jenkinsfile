@@ -10,6 +10,9 @@ pipeline {
                     image: docker:24-dind
                     securityContext:
                       privileged: true
+                    env:
+                    - name: DOCKER_TLS_CERTDIR
+                      value: ""
                   - name: kubectl
                     image: bitnami/kubectl:latest
                     command:
@@ -19,17 +22,19 @@ pipeline {
             '''
         }
     }
+    environment {
+        REGISTRY = "kind-registry:5000"
+        IMAGE = "kind-registry:5000/my-app:latest"
+    }
     stages {
-        stage('Build Docker Image') {
+        stage('Build & Push Image') {
             steps {
                 container('docker') {
-                    sh 'docker build -t my-app:latest .'
+                    sh '''
+                        docker build -t $IMAGE .
+                        docker push $IMAGE
+                    '''
                 }
-            }
-        }
-        stage('Load Image into kind') {
-            steps {
-                sh 'kind load docker-image my-app:latest --name jenkins-lab'
             }
         }
         stage('Deploy to Kubernetes') {

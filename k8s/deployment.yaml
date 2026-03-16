@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: my-app
-        image: my-app:latest
-        imagePullPolicy: Never
+        image: kind-registry:5000/my-app:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5000
