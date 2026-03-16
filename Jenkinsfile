@@ -23,7 +23,6 @@ pipeline {
         }
     }
     environment {
-        REGISTRY = "kind-registry:5000"
         IMAGE = "kind-registry:5000/my-app:latest"
     }
     stages {
@@ -31,6 +30,15 @@ pipeline {
             steps {
                 container('docker') {
                     sh '''
+                        # Configure Docker to allow insecure registry
+                        mkdir -p /etc/docker
+                        echo '{"insecure-registries":["kind-registry:5000"]}' > /etc/docker/daemon.json
+                        
+                        # Restart docker daemon to apply config
+                        kill -SIGHUP $(cat /var/run/docker.pid) || true
+                        sleep 3
+                        
+                        # Build and push
                         docker build -t $IMAGE .
                         docker push $IMAGE
                     '''
